@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Заметки</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>📝 Заметки</h1>
+    <div id="user-box" class="user-box hidden">
+      <span id="username"></span>
+      <button id="logout-btn" class="btn btn-ghost" type="button">Выйти</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Вход / регистрация -->
+    <section id="auth-view" class="card auth">
+      <div class="tabs">
+        <button class="tab active" type="button" data-mode="login">Вход</button>
+        <button class="tab" type="button" data-mode="register">Регистрация</button>
+      </div>
+      <form id="auth-form">
+        <label>Логин
+          <input name="username" autocomplete="username" required minlength="3" maxlength="50">
+        </label>
+        <label>Пароль
+          <input name="password" type="password" autocomplete="current-password" required minlength="6" maxlength="72">
+        </label>
+        <p id="auth-error" class="error"></p>
+        <button id="auth-submit" class="btn btn-primary" type="submit">Войти</button>
+      </form>
+    </section>
+
+    <!-- Заметки -->
+    <section id="notes-view" class="hidden">
+      <form id="note-form" class="card">
+        <h2 id="form-title">Новая заметка</h2>
+        <input name="title" placeholder="Заголовок" required maxlength="255">
+        <textarea name="content" placeholder="Текст заметки" rows="4" maxlength="4000"></textarea>
+        <p id="note-error" class="error"></p>
+        <div class="actions">
+          <button id="note-submit" class="btn btn-primary" type="submit">Добавить</button>
+          <button id="note-cancel" class="btn btn-ghost hidden" type="button">Отмена</button>
+        </div>
+      </form>
+
+      <p id="empty" class="empty hidden">Заметок пока нет. Добавьте первую!</p>
+      <div id="notes-list" class="notes"></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
