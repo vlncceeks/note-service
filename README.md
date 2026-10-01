@@ -1,7 +1,6 @@
 # Notes (простое CRUD-приложение)
 
 Запуск: `docker compose up --build`, затем http://localhost:3000
-Регистрируйтесь, логиньтесь, создавайте/правьте/удаляйте заметки.
 
 Стек: Spring Boot 3 (Java 22) + PostgreSQL + статический HTML/JS за nginx.
 Конфигурация - переменные окружения (см. .env, application.properties).
