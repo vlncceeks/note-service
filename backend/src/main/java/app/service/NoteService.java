@@ -65,6 +65,9 @@ public class NoteService {
 
   private Note getOwned(Long id, Long userId) {
     return noteRepository.findByIdAndUserId(id, userId)
-        .orElseThrow(() -> new NotFoundException("Note " + id + " not found"));
-  }
+        .orElseThrow(() -> {
+            log.warn("Note not found: noteId={}, userId={}", id, userId);
+            return new NotFoundException("Note " + id + " not found");
+        });
+}
 }

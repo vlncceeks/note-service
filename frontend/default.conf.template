@@ -1,9 +1,35 @@
+map $http_user_agent $loggable {
+    ~kube-probe 0;
+    default     1;
+}
+
+log_format json_combined escape=json
+  '{'
+    '"@timestamp":"$time_iso8601",'
+    '"level":"INFO",'
+    '"message":"$request",'
+    '"http.request.method":"$request_method",'
+    '"url.path":"$uri",'
+    '"http.response.status_code":$status,'
+    '"http.response.body.bytes":$body_bytes_sent,'
+    '"http.request.duration_ms":"$request_time",'
+    '"user_agent.original":"$http_user_agent",'
+    '"client.address":"$remote_addr",'
+    '"request_id":"$http_x_request_id",'
+    '"service.name":"note-service-frontend",'
+    '"service.version":"1.0.0",'
+    '"deployment.environment.name":"local"'
+  '}';
+
 server {
     listen 80;
     root /usr/share/nginx/html;
     index index.html;
 
+    access_log /dev/stdout json_combined if=$loggable;
+
     location /api/ {
         proxy_pass ${BACKEND_URL};
+        proxy_set_header X-Request-Id $request_id;
     }
 }

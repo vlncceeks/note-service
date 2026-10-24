@@ -1,0 +1,283 @@
+dashboards:
+  annotations: {}
+  enabled: false
+  grafanaOperator:
+    enabled: false
+    spec:
+      allowCrossNamespaceImport: false
+      instanceSelector:
+        matchLabels:
+          dashboards: grafana
+  labels: {}
+  namespace: ""
+extraObjects: []
+global:
+  cluster:
+    dnsDomain: cluster.local.
+  compatibility:
+    openshift:
+      adaptSecurityContext: auto
+  extraAnnotations: {}
+  extraLabels: {}
+  image:
+    registry: ""
+  imagePullSecrets: []
+license:
+  key: ""
+  secret:
+    key: ""
+    name: ""
+nameOverride: ""
+networkPolicy:
+  annotations: {}
+  egress: []
+  enabled: false
+  ingress: []
+  labels: {}
+podDisruptionBudget:
+  enabled: false
+  extraLabels: {}
+  maxUnavailable: 0
+  minAvailable: 0
+printNotes: true
+server:
+  affinity: {}
+  annotations: {}
+  command: []
+  containerWorkingDir: ""
+  deployment:
+    spec:
+      strategy:
+        type: Recreate
+  dnsConfig: {}
+  emptyDir: {}
+  enabled: true
+  env: []
+  envFrom: []
+  extraArgs:
+    envflag.enable: true
+    envflag.prefix: VM_
+    http.shutdownDelay: 15s
+    loggerFormat: json
+  extraContainers: []
+  extraHostPathMounts: []
+  extraLabels: {}
+  extraVolumeMounts: []
+  extraVolumes: []
+  fullnameOverride: ""
+  http:
+  - mtls: false
+    mtlsCAFile: ""
+    name: http
+    primary: true
+    tls: false
+    tlsAutocertCacheDir: ""
+    tlsAutocertEmail: ""
+    tlsAutocertHosts: ""
+    tlsCertFile: ""
+    tlsKeyFile: ""
+    tlsMinVersion: ""
+    value: :9428
+  image:
+    pullPolicy: IfNotPresent
+    registry: ""
+    repository: victoriametrics/victoria-logs
+    tag: ""
+    variant: ""
+  imagePullSecrets: []
+  ingress:
+    enabled: false
+    extraLabels: {}
+    hosts:
+    - name: vlogs.local
+      path:
+      - /
+      port: http
+    ingressClassName: ""
+    pathType: Prefix
+    tls: []
+  initContainers: []
+  lifecycle: {}
+  mode: statefulSet
+  nodeSelector: {}
+  persistentVolume:
+    accessModes:
+    - ReadWriteOnce
+    annotations: {}
+    enabled: true
+    existingClaim: ""
+    extraLabels: {}
+    matchLabels: {}
+    mountPath: /storage
+    name: ""
+    size: 2Gi
+    storageClassName: ""
+    subPath: ""
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    enabled: true
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  priorityClassName: ""
+  probe:
+    liveness:
+      failureThreshold: 10
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      tcpSocket: {}
+      timeoutSeconds: 5
+    readiness:
+      failureThreshold: 3
+      httpGet: {}
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 5
+    startup: {}
+  replicaCount: 1
+  resources: {}
+  retentionDiskSpaceUsage: ""
+  retentionMaxDiskUsagePercent: ""
+  retentionPeriod: 1
+  route:
+    annotations: {}
+    enabled: false
+    extraLabels: {}
+    extraRules: []
+    filters: []
+    hostnames: []
+    matches:
+    - path:
+        type: PathPrefix
+        value: '{{ dig "extraArgs" "http.pathPrefix" "/" .Values.server }}'
+    parentRefs: []
+  runtimeClassName: ""
+  schedulerName: ""
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    enabled: true
+    readOnlyRootFilesystem: true
+  service:
+    annotations: {}
+    clusterIP: None
+    externalIPs: []
+    externalTrafficPolicy: ""
+    extraPorts: []
+    healthCheckNodePort: ""
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    labels: {}
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    servicePort: ""
+    trafficDistribution: ""
+    type: ClusterIP
+  serviceMonitor:
+    annotations: {}
+    basicAuth: {}
+    enabled: false
+    extraLabels: {}
+    metricRelabelings: []
+    path: ""
+    port: ""
+    relabelings: []
+    targetPort: ""
+  statefulSet:
+    spec:
+      podManagementPolicy: OrderedReady
+      updateStrategy: {}
+  syslog:
+    tcp: []
+    udp: []
+  terminationGracePeriodSeconds: 60
+  tolerations: []
+  topologySpreadConstraints: []
+  vmServiceScrape:
+    annotations: {}
+    enabled: false
+    extraLabels: {}
+    metricRelabelings: []
+    port: ""
+    relabelings: []
+    targetPort: ""
+serviceAccount:
+  annotations: {}
+  automountToken: true
+  create: false
+  extraLabels: {}
+vector:
+  args:
+  - -w
+  - --config-dir
+  - /etc/vector/
+  containerPorts:
+  - containerPort: 9090
+    name: prom-exporter
+    protocol: TCP
+  customConfig:
+    api:
+      address: 0.0.0.0:8686
+      enabled: false
+    data_dir: /vector-data-dir
+    sinks:
+      exporter:
+        address: 0.0.0.0:9090
+        inputs:
+        - internal_metrics
+        type: prometheus_exporter
+      vlogs:
+        api_version: v8
+        compression: gzip
+        healthcheck:
+          enabled: false
+        inputs:
+        - parser
+        mode: bulk
+        request:
+          headers:
+            AccountID: "0"
+            ProjectID: "0"
+            VL-Msg-Field: message,msg,_msg,log.msg,log.message,log
+            VL-Stream-Fields: stream,kubernetes.pod_name,kubernetes.container_name,kubernetes.pod_namespace
+            VL-Time-Field: timestamp
+        type: elasticsearch
+    sources:
+      internal_metrics:
+        type: internal_metrics
+      k8s:
+        type: kubernetes_logs
+    transforms:
+      parser:
+        inputs:
+        - k8s
+        source: |
+          .log = parse_json(.message) ?? .message
+          del(.message)
+        type: remap
+  customConfigName: vector-vl-config
+  customConfigNamespace: ""
+  dataDir: /vector-data-dir
+  enabled: false
+  existingConfigMaps:
+  - vector-vl-config
+  resources: {}
+  role: Agent
+  service:
+    enabled: false
+victoria-metrics-common:
+  global:
+    cluster:
+      dnsDomain: cluster.local.
+    compatibility:
+      openshift:
+        adaptSecurityContext: auto
+    extraAnnotations: {}
+    extraLabels: {}
+    image:
+      registry: ""
+    imagePullSecrets: []
+  unitTest: false
