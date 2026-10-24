@@ -1,0 +1,118 @@
+affinity: {}
+annotations: {}
+collector:
+  excludeFilter: ""
+  extraFields: ""
+  ignoreFields: []
+  includeNodeAnnotations: false
+  includeNodeLabels: false
+  includePodAnnotations: false
+  includePodLabels: true
+  msgField:
+  - message
+  - msg
+  - log
+  streamFields:
+  - kubernetes.container_name
+  - kubernetes.pod_name
+  - kubernetes.pod_namespace
+  timeField:
+  - time
+  - ts
+  - timestamp
+defaultVolumeMounts:
+- mountPath: /var/log
+  name: varlog
+  readOnly: true
+- mountPath: /var/lib
+  name: varlib
+  readOnly: true
+defaultVolumes:
+- hostPath:
+    path: /var/log
+  name: varlog
+- hostPath:
+    path: /var/lib
+  name: varlib
+dnsConfig: {}
+env: []
+extraArgs:
+  envflag.enable: true
+  envflag.prefix: VL_
+  loggerFormat: json
+  tmpDataPath: /var/lib/vl-collector
+extraObjects: []
+extraVolumeMounts: []
+extraVolumes: []
+fileCollector: []
+fullnameOverride: ""
+global:
+  cluster:
+    dnsDomain: cluster.local.
+  compatibility:
+    openshift:
+      adaptSecurityContext: auto
+  extraAnnotations: {}
+  extraLabels: {}
+  image:
+    registry: ""
+  imagePullSecrets: []
+image:
+  pullPolicy: IfNotPresent
+  registry: ""
+  repository: victoriametrics/vlagent
+  tag: ""
+  variant: ""
+license:
+  key: ""
+  secret:
+    key: ""
+    name: ""
+nameOverride: ""
+networkPolicy:
+  annotations: {}
+  egress: []
+  enabled: false
+  ingress: []
+  labels: {}
+nodeSelector: {}
+persistence:
+  volume: {}
+podAnnotations: {}
+podLabels: {}
+podMonitor:
+  annotations: {}
+  enabled: false
+  extraLabels: {}
+  interval: ""
+  metricRelabelings: []
+  relabelings: []
+  scrapeTimeout: ""
+  vm: false
+podSecurityContext:
+  enabled: true
+priorityClassName: ""
+remoteWrite:
+- url: http://vls-victoria-logs-single-server:9428
+runtimeClassName: ""
+securityContext:
+  enabled: true
+serviceAccount:
+  annotations: {}
+  automount: true
+  name: ""
+tolerations: []
+updateStrategy: {}
+victoria-metrics-common:
+  global:
+    cluster:
+      dnsDomain: cluster.local.
+    compatibility:
+      openshift:
+        adaptSecurityContext: auto
+    extraAnnotations: {}
+    extraLabels: {}
+    image:
+      registry: ""
+    imagePullSecrets: []
+  unitTest: false

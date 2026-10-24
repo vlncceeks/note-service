@@ -1,0 +1,14 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service.name":"${SERVICE_NAME:-note-service-backend}","service.version":"1.0.0","deployment.environment.name":"${SPRING_PROFILES_ACTIVE:-local}","host.name":"${HOSTNAME:-unknown}","k8s.pod.name":"${K8S_POD_NAME:-unknown}"}</customFields>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>request_id</includeMdcKeyName>
+        </encoder>
+    </appender>
+
+    <root level="${LOG_LEVEL:-INFO}">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
