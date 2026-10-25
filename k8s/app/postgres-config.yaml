@@ -5,3 +5,4 @@ metadata:
 data:
   POSTGRES_DB: notes
   POSTGRES_USER: notes
+  POSTGRES_EXPORTER_USER: postgres_exporter
