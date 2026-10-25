@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 echo "=== Удаление подов ==="
 
-kubectl delete -f k8s/
+kubectl delete -f app/
 
 echo "=== Удаление образов ==="
 

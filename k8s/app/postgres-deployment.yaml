@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: postgres
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9187"
     spec:
       containers:
         - name: postgres
@@ -39,6 +43,26 @@ spec:
               memory: 256Mi
             limits:
               memory: 512Mi
+
+        - name: postgres-exporter
+          image: prometheuscommunity/postgres-exporter:v0.20.1
+          ports:
+            - name: metrics
+              containerPort: 9187
+          env:
+            - name: DATA_SOURCE_URI
+              value: "localhost:5432/notes?sslmode=disable"
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_EXPORTER_USER
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_EXPORTER_PASSWORD
+
       volumes:
         - name: postgres-data
           persistentVolumeClaim:

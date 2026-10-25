@@ -8,6 +8,7 @@ import app.entity.Note;
 import app.exception.NotFoundException;
 import app.repository.NoteRepository;
 import app.repository.UserRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,12 @@ public class NoteService {
 
   private final NoteRepository noteRepository;
   private final UserRepository userRepository;
+  private final MeterRegistry meterRegistry;
 
-  public NoteService(NoteRepository noteRepository, UserRepository userRepository) {
+  public NoteService(NoteRepository noteRepository, UserRepository userRepository, MeterRegistry meterRegistry) {
     this.noteRepository = noteRepository;
     this.userRepository = userRepository;
+    this.meterRegistry = meterRegistry;
   }
 
   @Transactional(readOnly = true)
@@ -32,6 +35,8 @@ public class NoteService {
 
   @Transactional(readOnly = true)
   public List<NoteResponse> findAll(Long userId) {
+    meterRegistry.counter("notes.findAll").increment();
+
     return noteRepository.findByUserIdOrderByIdDesc(userId).stream()
         .map(NoteResponse::from)
         .toList();
@@ -44,6 +49,9 @@ public class NoteService {
     note.setTitle(request.title());
     note.setContent(request.content());
     noteRepository.save(note);
+
+    meterRegistry.counter("notes.created").increment();
+
     log.info("Note created: id={}, userId={}", note.getId(), userId);
     return NoteResponse.from(note);
   }
@@ -53,6 +61,9 @@ public class NoteService {
     Note note = getOwned(id, userId);
     note.setTitle(request.title());
     note.setContent(request.content());
+
+    meterRegistry.counter("notes.updated").increment();
+
     log.info("Note updated: id={}, userId={}", id, userId);
     return NoteResponse.from(note);
   }
@@ -60,6 +71,9 @@ public class NoteService {
   @Transactional
   public void delete(Long id, Long userId) {
     noteRepository.delete(getOwned(id, userId));
+    
+    meterRegistry.counter("notes.deleted").increment();
+
     log.info("Note deleted: id={}, userId={}", id, userId);
   }
 

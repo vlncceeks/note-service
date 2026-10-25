@@ -6,6 +6,7 @@ import app.entity.Role;
 import app.entity.User;
 import app.exception.ConflictException;
 import app.repository.UserRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,11 +19,17 @@ public class AuthService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final MeterRegistry meterRegistry;
 
-  public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
-  }
+  public AuthService(
+    UserRepository userRepository,
+    PasswordEncoder passwordEncoder,
+    MeterRegistry meterRegistry
+) {
+  this.userRepository = userRepository;
+  this.passwordEncoder = passwordEncoder;
+  this.meterRegistry = meterRegistry;
+}
 
   @Transactional
   public UserResponse register(RegisterRequest request) {
@@ -34,6 +41,9 @@ public class AuthService {
     user.setPassword(passwordEncoder.encode(request.password()));
     user.setRole(Role.USER);
     userRepository.save(user);
+
+    meterRegistry.counter("users.registered").increment();
+
     log.info("User registered: id={}", user.getId());
     return UserResponse.from(user);
   }
