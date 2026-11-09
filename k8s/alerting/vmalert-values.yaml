@@ -1,0 +1,132 @@
+server:
+  datasource:
+    url: "http://vmsingle-victoria-metrics-single-server.monitoring.svc.cluster.local:8428"
+
+  notifier:
+    url: "http://vma-victoria-metrics-alert-alertmanager.monitoring.svc.cluster.local:9093"
+
+  config:
+    alerts:
+      groups:
+
+        # Бизнесовые метрики
+        - name: business-alerts
+          interval: 30s
+          rules:
+            - alert: LowOperationSuccessRate
+              expr: |
+                (
+                  100 *
+                  (
+                    (sum(increase(notes_created_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_updated_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_deleted_total[5m])) or vector(0))
+                  )
+                  /
+                  clamp_min(
+                    (sum(increase(notes_created_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_updated_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_deleted_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_create_failures_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_update_failures_total[5m])) or vector(0))
+                    +
+                    (sum(increase(notes_delete_failures_total[5m])) or vector(0)),
+                    1
+                  )
+                ) < 99
+                and
+                (
+                  (sum(increase(notes_created_total[5m])) or vector(0))
+                  +
+                  (sum(increase(notes_updated_total[5m])) or vector(0))
+                  +
+                  (sum(increase(notes_deleted_total[5m])) or vector(0))
+                  +
+                  (sum(increase(notes_create_failures_total[5m])) or vector(0))
+                  +
+                  (sum(increase(notes_update_failures_total[5m])) or vector(0))
+                  +
+                  (sum(increase(notes_delete_failures_total[5m])) or vector(0))
+                ) > 0
+              for: 2m
+              labels:
+                severity: warning
+                component: business
+              annotations:
+                summary: "Низкий процент успешных бизнес-операций"
+                description: "Доля успешных операций за последние 5 минут ниже целевого значения 99%."
+
+            - alert: LowNotesReadActivity
+              expr: increase(notes_findAll_total[30m]) == 0
+              for: 5m
+              labels:
+                severity: warning
+                component: business
+              annotations:
+                summary: "Отсутствуют запросы на получение заметок"
+                description: "В течение 30 минут пользователи не запрашивали свои заметки."
+
+        # Метрики приложения, Spring Boot и JVM
+        - name: framework-alerts
+          interval: 30s
+          rules:
+            - alert: HighErrorRate
+              expr: |
+                (
+                  sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+                  /
+                  clamp_min(
+                    sum(rate(http_server_requests_seconds_count[5m])),
+                    0.001
+                  )
+                ) > 0.05
+                and
+                sum(rate(http_server_requests_seconds_count[5m])) > 0.01
+              for: 2m
+              labels:
+                severity: critical
+                component: framework
+              annotations:
+                summary: "Высокий процент HTTP 5xx"
+                description: "Более 5% HTTP-запросов завершаются ошибками 5xx."
+
+            - alert: DatabaseConnectionPoolExhausted
+              expr: hikaricp_connections_pending > 0
+              for: 1m
+              labels:
+                severity: warning
+                component: framework
+              annotations:
+                summary: "Исчерпание пула соединений БД"
+                description: "Приложение ожидает свободные соединения с базой данных."
+
+            - alert: HighJvmHeapUsage
+              expr: |
+                (
+                  sum(jvm_memory_used_bytes{area="heap"})
+                  /
+                  sum(jvm_memory_max_bytes{area="heap"})
+                ) > 0.85
+              for: 5m
+              labels:
+                severity: warning
+                component: framework
+              annotations:
+                summary: "Высокое использование JVM Heap"
+                description: "Использование Heap превышает 85%."
+
+            - alert: HighJvmGcOverhead
+              expr: jvm_gc_overhead > 0.10
+              for: 5m
+              labels:
+                severity: warning
+                component: framework
+              annotations:
+                summary: "Высокая нагрузка Garbage Collector"
+                description: "JVM тратит более 10% времени на сборку мусора."
