@@ -14,7 +14,7 @@ BASE_URL = os.getenv(
     "BASE_URL",
     "http://note-service-backend:8080"
 ).rstrip("/")
-INTERVAL = int(os.getenv("PROBE_INTERVAL", "30"))
+INTERVAL = int(os.getenv("PROBE_INTERVAL", "10"))
 TIMEOUT = 5
 
 runs = Counter("prober_runs", "Total user scenarios executed")
@@ -203,8 +203,10 @@ def main():
         finally:
             scenarios_total.inc()
 
-        duration.observe(time.monotonic() - started)
-        time.sleep(INTERVAL)
+        elapsed = time.monotonic() - started
+        duration.observe(elapsed)
+
+        time.sleep(max(0, INTERVAL - elapsed))
 
 
 if __name__ == "__main__":
